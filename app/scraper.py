@@ -349,7 +349,7 @@ def create_slots_for_doctor(
     doctor: Doctor,
     department: Department,
     days,
-    days_ahead=30,
+    days_ahead=10,
 ):
     now = datetime.now(IST).replace(tzinfo=None)
     today = datetime.now(IST).date()
@@ -407,15 +407,65 @@ def create_slots_for_doctor(
 
 
 def seed_real_aiims_patna_data(db: Session):
-    rows = scrape_general_schedule()
+    all_rows = scrape_general_schedule()
+
+    IMPORTANT_DEPARTMENTS = {
+        "Cardiology",
+        "Dermatology",
+        "ENT",
+        "Ophthalmology",
+        "Orthopaedics",
+        "Paediatrics",
+        "Obstetrics & Gynaecology",
+        "Neurology",
+        "Nephrology",
+        "Psychiatry",
+        "Pulmonary Medicine",
+        "Gastroenterology",
+        "Urology",
+        "General Medicine",
+        "General Surgery",
+    }
+
+    rows = [
+        row for row in all_rows
+        if row["department"] in IMPORTANT_DEPARTMENTS
+    ]
+
+    print(
+        f"Reduced schedule rows from {len(all_rows)} to {len(rows)} important rows.",
+        flush=True,
+    )
 
     total_doctors = 0
     total_slots = 0
+    start_time = datetime.now()
 
-    for row in rows:
-        department = get_or_create_department(db, row["department"])
+    print("\n========================================", flush=True)
+    print("Starting AIIMS Patna OPD database seed", flush=True)
+    print(f"Total OPD schedule rows found: {len(rows)}", flush=True)
+    print("========================================\n", flush=True)
 
-        for doctor_name in row["doctors"]:
+    for row_index, row in enumerate(rows, start=1):
+        department_name = row["department"]
+        unit_name = row["unit"]
+        doctors_in_row = row["doctors"]
+
+        print(
+            f"\n[{row_index}/{len(rows)}] Processing: {department_name} | {unit_name}",
+            flush=True,
+        )
+        print(
+            f"Doctors in this row: {len(doctors_in_row)} | OPD days: {', '.join(row['days'])}",
+            flush=True,
+        )
+
+        department = get_or_create_department(db, department_name)
+
+        row_doctors_count = 0
+        row_slots_count = 0
+
+        for doctor_name in doctors_in_row:
             doctor_name = clean_text(doctor_name)
 
             if not doctor_name:
@@ -424,20 +474,47 @@ def seed_real_aiims_patna_data(db: Session):
             doctor = get_or_create_doctor(
                 db=db,
                 name=doctor_name,
-                unit=row["unit"],
+                unit=unit_name,
                 department=department,
             )
 
-            total_doctors += 1
-
-            total_slots += create_slots_for_doctor(
+            slots_created = create_slots_for_doctor(
                 db=db,
                 doctor=doctor,
                 department=department,
                 days=row["days"],
             )
 
-    db.commit()
+            total_doctors += 1
+            total_slots += slots_created
+            row_doctors_count += 1
+            row_slots_count += slots_created
+
+            print(
+                f"  Stored doctor {total_doctors}: {doctor_name} | New slots: {slots_created} | Total slots: {total_slots}",
+                flush=True,
+            )
+
+        db.commit()
+
+        elapsed = (datetime.now() - start_time).total_seconds()
+        progress = round((row_index / len(rows)) * 100, 2)
+
+        print(
+            f"Committed row {row_index}/{len(rows)} | Progress: {progress}% | "
+            f"Doctors so far: {total_doctors} | Slots so far: {total_slots} | "
+            f"Elapsed: {round(elapsed, 1)} sec",
+            flush=True,
+        )
+
+    total_time = round((datetime.now() - start_time).total_seconds(), 2)
+
+    print("\n========================================", flush=True)
+    print("Seed completed successfully", flush=True)
+    print(f"Total doctors processed: {total_doctors}", flush=True)
+    print(f"Total slots created: {total_slots}", flush=True)
+    print(f"Total time: {total_time} seconds", flush=True)
+    print("========================================\n", flush=True)
 
     return {
         "ok": True,
@@ -447,4 +524,5 @@ def seed_real_aiims_patna_data(db: Session):
         "parsed_schedule_rows": len(rows),
         "doctors_seen": total_doctors,
         "new_slots_created": total_slots,
+        "time_taken_seconds": total_time,
     }
