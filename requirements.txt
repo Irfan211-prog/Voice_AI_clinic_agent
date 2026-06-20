@@ -1,0 +1,12 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+SQLAlchemy==2.0.36
+psycopg2-binary==2.9.10
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+requests==2.32.3
+beautifulsoup4==4.12.3
+python-dateutil==2.9.0.post0
+rapidfuzz==3.10.1
+tzdata
+playwright==1.49.1

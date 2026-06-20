@@ -1,0 +1,180 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "get_clinic_context",
+      "description": "Get clinic departments, OPD hours, doctor count, and available slot count.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    "server": {
+      "url": "https://YOUR_BACKEND_URL/vapi/webhook",
+      "headers": {
+        "x-vapi-secret": "change-this-secret"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "search_availability",
+      "description": "Search available OPD appointment slots by department, doctor, date, and time window.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "department": {
+            "type": "string",
+            "description": "Department name or symptom, for example heart, skin, eye, Cardiology, Dermatology."
+          },
+          "doctor_name": {
+            "type": "string",
+            "description": "Doctor name if the patient asks for a specific doctor."
+          },
+          "preferred_date": {
+            "type": "string",
+            "description": "Preferred date in YYYY-MM-DD format, or today, tomorrow, +2."
+          },
+          "time_window": {
+            "type": "string",
+            "enum": ["morning", "afternoon", "evening"],
+            "description": "Preferred time window."
+          },
+          "appointment_type": {
+            "type": "string",
+            "description": "Usually General OPD."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Number of slots to return."
+          }
+        }
+      }
+    },
+    "server": {
+      "url": "https://YOUR_BACKEND_URL/vapi/webhook",
+      "headers": {
+        "x-vapi-secret": "change-this-secret"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "book_appointment",
+      "description": "Book a selected appointment slot after collecting patient name and phone number.",
+      "parameters": {
+        "type": "object",
+        "required": ["slot_id", "patient_name", "phone"],
+        "properties": {
+          "slot_id": {
+            "type": "integer",
+            "description": "Selected slot ID."
+          },
+          "patient_name": {
+            "type": "string",
+            "description": "Patient full name."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Patient phone number."
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason for visit."
+          }
+        }
+      }
+    },
+    "server": {
+      "url": "https://YOUR_BACKEND_URL/vapi/webhook",
+      "headers": {
+        "x-vapi-secret": "change-this-secret"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "lookup_appointment",
+      "description": "Find appointment details using appointment ID or phone number.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appointment_id": {
+            "type": "string",
+            "description": "Appointment ID."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Patient phone number."
+          }
+        }
+      }
+    },
+    "server": {
+      "url": "https://YOUR_BACKEND_URL/vapi/webhook",
+      "headers": {
+        "x-vapi-secret": "change-this-secret"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "cancel_appointment",
+      "description": "Cancel an active appointment using appointment ID or phone number.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appointment_id": {
+            "type": "string",
+            "description": "Appointment ID."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Patient phone number."
+          }
+        }
+      }
+    },
+    "server": {
+      "url": "https://YOUR_BACKEND_URL/vapi/webhook",
+      "headers": {
+        "x-vapi-secret": "change-this-secret"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "reschedule_appointment",
+      "description": "Move an existing appointment to a new available slot.",
+      "parameters": {
+        "type": "object",
+        "required": ["new_slot_id"],
+        "properties": {
+          "appointment_id": {
+            "type": "string",
+            "description": "Appointment ID."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Patient phone number."
+          },
+          "new_slot_id": {
+            "type": "integer",
+            "description": "New selected slot ID."
+          }
+        }
+      }
+    },
+    "server": {
+      "url": "https://YOUR_BACKEND_URL/vapi/webhook",
+      "headers": {
+        "x-vapi-secret": "change-this-secret"
+      }
+    }
+  }
+]

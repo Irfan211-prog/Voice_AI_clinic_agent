@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.env
+clinic.db
+eval_results.json
+debug_aiims_opd_page.html
+debug_aiims_opd_text.txt
+.playwright/
