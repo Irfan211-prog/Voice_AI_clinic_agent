@@ -75,6 +75,21 @@ def add_result(results, latencies, scenario, passed, latency_ms, details):
     latencies.append(latency_ms)
 
 
+def is_real_slot_conflict(result):
+    message = str(result.get("message", "")).lower()
+
+    return (
+        result.get("ok") is False
+        and result.get("error") != "INVALID_PHONE"
+        and (
+            "taken" in message
+            or "not available" in message
+            or "alternative" in message
+            or len(result.get("alternatives", [])) > 0
+        )
+    )
+
+
 def main():
     print("Checking backend health...")
     health = ensure_seeded()
@@ -82,10 +97,11 @@ def main():
     print("Health:")
     print(json.dumps(health, indent=2))
 
+    # Creates valid 10 digit Indian mobile numbers.
+    # Format: 98 + 6 digit run_id + 10/11 = total 10 digits.
     run_id = str(int(time.time()))[-6:]
-
-    patient_phone = f"90000{run_id}"
-    second_phone = f"91111{run_id}"
+    patient_phone = f"98{run_id}10"
+    second_phone = f"98{run_id}11"
 
     results = []
     latencies = []
@@ -165,7 +181,7 @@ def main():
         results,
         latencies,
         "double_booking_conflict_prevented",
-        conflict_result.get("ok") is False,
+        is_real_slot_conflict(conflict_result),
         latency,
         conflict_result,
     )
@@ -213,6 +229,23 @@ def main():
         )
 
     if appointment_id:
+        lookup_result, latency = call_tool(
+            "lookup_appointment",
+            {
+                "phone": patient_phone,
+            },
+        )
+
+        add_result(
+            results,
+            latencies,
+            "lookup_appointment_by_phone",
+            lookup_result.get("ok") is True,
+            latency,
+            lookup_result,
+        )
+
+    if appointment_id:
         cancel_result, latency = call_tool(
             "cancel_appointment",
             {
@@ -228,22 +261,6 @@ def main():
             latency,
             cancel_result,
         )
-
-    lookup_result, latency = call_tool(
-        "lookup_appointment",
-        {
-            "phone": patient_phone,
-        },
-    )
-
-    add_result(
-        results,
-        latencies,
-        "lookup_appointment_by_phone",
-        lookup_result.get("ok") is True,
-        latency,
-        lookup_result,
-    )
 
     passed = sum(1 for item in results if item["passed"])
     total = len(results)
@@ -261,6 +278,10 @@ def main():
     summary = {
         "run_at_utc": datetime.utcnow().isoformat(),
         "base_url": BASE_URL,
+        "test_phone_numbers_used": {
+            "patient_phone": patient_phone,
+            "second_phone": second_phone,
+        },
         "what_this_eval_measures": [
             "Real clinic data availability search",
             "Vague symptom to department resolution",

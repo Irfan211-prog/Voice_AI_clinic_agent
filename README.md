@@ -29,7 +29,10 @@ This project was built for the Voice AI Agent engineering assignment. The goal i
 
 ## Why Vapi?
 
-Vapi was selected because the assignment requires a real voice AI agent that can talk naturally and call backend tools during the conversation. Vapi lets the assistant connect to custom backend endpoints for actions such as searching slots, booking, rescheduling, and cancellation.
+I chose Vapi because the assignment required a real voice AI agent, not just a chatbot with a voice layer. Vapi provides speech-to-text, LLM orchestration, text-to-speech, phone/web call testing, tool calling, and call logs in one platform.
+
+This helped me focus on the core engineering work: real clinic data, appointment booking logic, conflict prevention, backend APIs, database storage, and evaluation. Vapi also makes it easy to connect the assistant to custom FastAPI tools, so every booking, rescheduling, cancellation, and lookup goes through the deployed backend instead of hardcoded responses.
+
 
 ## Real Clinic Data
 
