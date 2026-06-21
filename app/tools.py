@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime, timedelta, time, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from typing import Any, Dict
@@ -72,6 +73,38 @@ DEPARTMENT_ALIASES = {
     "urine": "Urology",
     "urinary": "Urology",
 }
+
+
+def normalize_indian_phone(phone):
+    if not phone:
+        return None
+
+    phone = str(phone).strip()
+
+    # Remove spaces, hyphens, brackets, + symbol, etc.
+    digits = re.sub(r"\D", "", phone)
+
+    # Accept numbers like +91 9876543210 or 91 9876543210
+    if digits.startswith("91") and len(digits) == 12:
+        digits = digits[2:]
+
+    # Indian mobile number should be exactly 10 digits
+    if len(digits) != 10:
+        return None
+
+    # Indian mobile numbers usually start with 6, 7, 8, or 9
+    if digits[0] not in ["6", "7", "8", "9"]:
+        return None
+
+    return digits
+
+
+def invalid_phone_response():
+    return {
+        "ok": False,
+        "error": "INVALID_PHONE",
+        "message": "Please provide a valid 10 digit Indian mobile number starting with 6, 7, 8, or 9.",
+    }
 
 
 def now_local_naive():
@@ -370,12 +403,27 @@ def book_appointment(db: Session, args: Dict[str, Any]):
     if not slot_id or not patient_name or not phone:
         return {
             "ok": False,
-            "message": "Missing required details. Need slot_id, patient_name, and phone.",
+            "message": "Missing required details. Need slot_id, patient_name, and valid 10 digit phone number.",
+        }
+
+    clean_phone = normalize_indian_phone(phone)
+
+    if not clean_phone:
+        return invalid_phone_response()
+
+    phone = clean_phone
+
+    try:
+        slot_id = int(slot_id)
+    except Exception:
+        return {
+            "ok": False,
+            "message": "Invalid slot_id.",
         }
 
     slot = (
         db.query(Slot)
-        .filter(Slot.id == int(slot_id))
+        .filter(Slot.id == slot_id)
         .with_for_update()
         .first()
     )
@@ -426,32 +474,18 @@ def find_appointment(db: Session, appointment_id=None, phone=None):
     query = db.query(Appointment).filter(Appointment.status == "booked")
 
     if appointment_id:
-        return query.filter(Appointment.id == int(appointment_id)).first()
-
-    if phone:
-        return (
-            query.join(Patient, Appointment.patient_id == Patient.id)
-            .filter(Patient.phone == phone)
-            .order_by(Appointment.created_at.desc())
-            .first()
-        )
-
-    return None
-
-
-def find_appointment(db: Session, appointment_id=None, phone=None):
-    query = db.query(Appointment).filter(Appointment.status == "booked")
-
-    if appointment_id:
         appointment_id = str(appointment_id).strip()
         return query.filter(Appointment.id == appointment_id).first()
 
     if phone:
-        phone = str(phone).strip()
+        clean_phone = normalize_indian_phone(phone)
+
+        if not clean_phone:
+            return None
 
         return (
             query.join(Patient, Appointment.patient_id == Patient.id)
-            .filter(Patient.phone == phone)
+            .filter(Patient.phone == clean_phone)
             .order_by(Appointment.created_at.desc())
             .first()
         )
@@ -484,16 +518,26 @@ def lookup_appointment(db: Session, args: Dict[str, Any]):
         }
 
     if phone:
-        phone = str(phone).strip()
+        clean_phone = normalize_indian_phone(phone)
+
+        if not clean_phone:
+            return invalid_phone_response()
 
         appointments = (
             db.query(Appointment)
             .join(Patient, Appointment.patient_id == Patient.id)
-            .filter(Patient.phone == phone)
+            .filter(Patient.phone == clean_phone)
             .order_by(Appointment.created_at.desc())
             .limit(5)
             .all()
         )
+
+        if not appointments:
+            return {
+                "ok": False,
+                "message": "No appointment found for this phone number.",
+                "appointments": [],
+            }
 
         return {
             "ok": True,
@@ -502,13 +546,21 @@ def lookup_appointment(db: Session, args: Dict[str, Any]):
 
     return {
         "ok": False,
-        "message": "Need appointment_id or phone.",
+        "message": "Need appointment_id or valid 10 digit phone number.",
     }
 
 
 def cancel_appointment(db: Session, args: Dict[str, Any]):
     appointment_id = args.get("appointment_id")
     phone = args.get("phone")
+
+    if phone:
+        clean_phone = normalize_indian_phone(phone)
+
+        if not clean_phone:
+            return invalid_phone_response()
+
+        phone = clean_phone
 
     appt = find_appointment(db, appointment_id=appointment_id, phone=phone)
 
@@ -523,6 +575,7 @@ def cancel_appointment(db: Session, args: Dict[str, Any]):
     appt.updated_at = datetime.utcnow()
 
     db.commit()
+    db.refresh(appt)
 
     return {
         "ok": True,
@@ -539,6 +592,14 @@ def reschedule_appointment(db: Session, args: Dict[str, Any]):
     if not new_slot_id:
         return {"ok": False, "message": "Need new_slot_id to reschedule."}
 
+    if phone:
+        clean_phone = normalize_indian_phone(phone)
+
+        if not clean_phone:
+            return invalid_phone_response()
+
+        phone = clean_phone
+
     appt = find_appointment(db, appointment_id=appointment_id, phone=phone)
 
     if not appt:
@@ -547,9 +608,17 @@ def reschedule_appointment(db: Session, args: Dict[str, Any]):
             "message": "No active appointment found to reschedule.",
         }
 
+    try:
+        new_slot_id = int(new_slot_id)
+    except Exception:
+        return {
+            "ok": False,
+            "message": "Invalid new_slot_id.",
+        }
+
     new_slot = (
         db.query(Slot)
-        .filter(Slot.id == int(new_slot_id))
+        .filter(Slot.id == new_slot_id)
         .with_for_update()
         .first()
     )
