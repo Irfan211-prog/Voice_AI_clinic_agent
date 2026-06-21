@@ -304,6 +304,11 @@ Voice_AI_Clinic_Agent/
 │   └── main.py
 ├── scripts/
 │   └── seed_real_data.py
+├── images/
+    └── eval_result.png
+    └── phone_number.png
+    └── render_health.png
+    └── vapi_assistant.png
 ├── eval/
 │   └── run_eval.py
 ├── vapi/
