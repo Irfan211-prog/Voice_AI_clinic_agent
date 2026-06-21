@@ -15,6 +15,16 @@ The assistant can handle the appointment lifecycle through voice:
 
 ---
 
+## Quick Links
+
+* GitHub Repository: <https://github.com/Irfan211-prog/Voice_AI_clinic_agent>
+* Loom Demo Video: <https://drive.google.com/file/d/1WCC2eEamkWEIw5UzjXdetZCb7nqMhpd4/view?usp=sharing>
+* Live Backend Health:
+  https://voice-ai-clinic-agent.onrender.com/health
+
+---
+
+
 ## Assignment Context
 
 This project was built for the **Voice AI Agent engineering assignment**.
@@ -24,6 +34,20 @@ The goal is not just to create a chatbot with speech, but a real voice agent con
 Patients should be able to speak naturally and complete appointment tasks such as booking, rescheduling, cancellation, and lookup without human involvement.
 
 ---
+
+## Screenshots
+
+### Vapi Assistant
+
+![Vapi Assistant](images/vapi_assistant.png)
+
+### Live Backend
+
+![Render Health](images/render_health.png)
+
+### Evaluation Result
+
+![Eval Result](images/eval_result.png)
 
 ## Live Deployment
 
@@ -55,11 +79,14 @@ Tool webhook URL:
 https://voice-ai-clinic-agent.onrender.com/vapi/webhook
 ```
 
-A Vapi phone number was also configured for independent calling/testing:
+A Vapi phone number was also configured for independent calling/testing: 
 
 ```txt
 +1 929 242 0928
 ```
+Note: Depending on the reviewer's location and carrier, international calling charges or ISD balance may be required to place a phone call. The complete functionality can also be verified through the Vapi dashboard, call logs, backend APIs, and evaluation harness.
+
+![Phone number](phone_number.png)
 
 ---
 
@@ -476,21 +503,44 @@ Full end-to-end voice latency also depends on Vapi, speech-to-text, LLM response
 
 ## Demo Flow
 
-Suggested Loom demo under 3 minutes:
+The Loom demo includes:
 
-1. Show deployed backend health endpoint.
-2. Show Vapi assistant connected to backend tools.
-3. Show previous successful Vapi call log or live call.
-4. Patient says: “I want to see a cardiology doctor tomorrow morning.”
-5. Agent searches Cardiology availability.
-6. Patient chooses a slot.
-7. Agent collects name and phone number.
-8. Agent books appointment.
-9. Show Supabase appointment row.
-10. Show eval harness output with `task_success_rate: 1.0`.
+* Live deployed backend on Render
+* Vapi voice assistant
+* Real appointment search
+* Appointment booking
+* Supabase database storage
+* Double-booking prevention
+* Rescheduling
+* Cancellation
+* Eval harness execution
+* Task success rate of 1.0
 
 ---
 
 ## Final Result
 
 The project demonstrates an end-to-end voice AI clinic receptionist using real clinic data, deployed backend logic, database-backed appointment handling, conflict prevention, and a rerunnable eval harness.
+
+## Evaluation Summary
+
+Latest deployed evaluation result:
+
+```json
+{
+  "task_success_rate": 1.0,
+  "passed": 7,
+  "total": 7
+}
+```
+
+This confirms successful execution of:
+
+* Availability search
+* Symptom-to-department mapping
+* Appointment booking
+* Double-booking prevention
+* Alternative slot recovery
+* Rescheduling
+* Appointment lookup
+* Cancellation
