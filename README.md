@@ -86,7 +86,7 @@ A Vapi phone number was also configured for independent calling/testing:
 ```
 Note: Depending on the reviewer's location and carrier, international calling charges or ISD balance may be required to place a phone call. The complete functionality can also be verified through the Vapi dashboard, call logs, backend APIs, and evaluation harness.
 
-![Phone number](phone_number.png)
+![Phone number](images/phone_number.png)
 
 ---
 
